@@ -1,0 +1,25 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Node / Angular (jour 3)
+node_modules/
+dist/
+.angular/
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Secrets (jour 5 : clé API)
+.env

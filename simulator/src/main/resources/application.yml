@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: factorypulse-simulator
+  kafka:
+    # En local (IDE) : localhost:9092. Dans Docker Compose : kafka:29092 (variable d'environnement).
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # On n'ajoute pas le nom de la classe Java dans les en-têtes :
+        # le consommateur (jour 2) pourra lire le JSON sans dépendre de ce projet.
+        spring.json.add.type.headers: false
+
+simulator:
+  topic: machine-events
+  tick-millis: 1000
+  energy-report-seconds: 5
+  machines:
+    - id: M1
+      name: Presse
+      ideal-cycle-seconds: 2.0
+      failure-probability: 0.004
+      repair-probability: 0.06
+      reject-rate: 0.03
+      power-kw: 15
+    - id: M2
+      name: Assemblage
+      ideal-cycle-seconds: 3.0
+      failure-probability: 0.003
+      repair-probability: 0.05
+      reject-rate: 0.02
+      power-kw: 8
+    - id: M3
+      name: Conditionnement
+      ideal-cycle-seconds: 1.5
+      failure-probability: 0.006
+      repair-probability: 0.08
+      reject-rate: 0.04
+      power-kw: 5
+    - id: M4
+      name: Controle qualite
+      ideal-cycle-seconds: 2.5
+      failure-probability: 0.002
+      repair-probability: 0.10
+      reject-rate: 0.01
+      power-kw: 3

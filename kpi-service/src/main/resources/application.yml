@@ -1,0 +1,36 @@
+server:
+  port: 8082   # 8080 et 8081 sont souvent pris par d'autres applications (ex. JobBoard)
+
+spring:
+  application:
+    name: factorypulse-kpi-service
+  data:
+    mongodb:
+      # En local (IDE) : localhost. Dans Docker Compose : mongo (variable d'environnement).
+      uri: ${MONGODB_URI:mongodb://localhost:27017/factorypulse}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      # Toutes les instances du kpi-service partagent ce groupe : Kafka leur répartit les partitions.
+      group-id: kpi-service
+      # Au tout premier démarrage, on lit le topic depuis le début (tout l'historique).
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer : un message illisible est signalé et ignoré au lieu de bloquer la lecture.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # Le simulateur n'envoie pas le nom de classe Java : on indique ici en quoi convertir le JSON.
+        spring.json.value.default.type: com.factorypulse.kpi.domain.MachineEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.factorypulse.kpi.domain
+
+kpi:
+  topic: machine-events
+  # Temps de cycle idéal de chaque machine (doit correspondre au simulateur).
+  # Les crochets "[M1]" gardent la clé exactement telle quelle (majuscules comprises).
+  ideal-cycle-seconds:
+    "[M1]": 2.0
+    "[M2]": 3.0
+    "[M3]": 1.5
+    "[M4]": 2.5

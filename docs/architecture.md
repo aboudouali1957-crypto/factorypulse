@@ -77,7 +77,7 @@ Le domaine ne connaît ni l'application ni Kafka. L'application ne connaît pas 
 
 ---
 
-## 3. Les questions d'architecture en entretien
+## 3. Choix d'architecture
 
 **« Pourquoi pas un monolithe ? »**
 Un monolithe serait plus simple au début. Mais ici, la production d'événements et leur analyse ont des rythmes et des besoins différents. Séparer les services par Kafka permet de les faire évoluer, de les redémarrer et de les mettre à l'échelle indépendamment.

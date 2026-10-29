@@ -32,7 +32,7 @@ Le simulateur suit une **architecture hexagonale** : voir [architecture.md](arch
 | `MachineSimulatorTest.java` | Test | Teste une machine avec un aléatoire fixé (seed). |
 | `SimulateProductionLineUseCaseTest.java` | Test | Teste le cas d'usage avec un faux publisher en mémoire, sans Kafka. |
 
-## Les choix techniques, et comment les expliquer en entretien
+## Choix techniques
 
 **Pourquoi Kafka plutôt qu'un appel REST direct ?**
 Le simulateur et le service de calcul sont **découplés** : si le service KPI s'arrête, les événements restent stockés dans Kafka et seront lus au redémarrage. On peut aussi ajouter d'autres consommateurs (alertes, archivage) sans toucher au simulateur.
@@ -64,9 +64,3 @@ Disponibilité = temps de marche / temps d'ouverture
 Performance   = (pièces produites × temps de cycle idéal) / temps de marche
 Qualité       = pièces bonnes / pièces produites
 ```
-
-## Questions à te poser avant le jour 2
-
-1. Que se passe-t-il si le simulateur envoie un événement alors que Kafka est arrêté ?
-2. Pourquoi la presse (M1) produit-elle moins de 1 800 pièces par heure alors que son cycle idéal est de 2 secondes ?
-3. Si on voulait 10 machines au lieu de 4, quel fichier faudrait-il modifier ?

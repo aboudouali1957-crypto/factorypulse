@@ -64,7 +64,7 @@ Le service ne reçoit pas « la machine a tourné 8 secondes ». Il reçoit seul
 | Adaptateur de sortie | `MongoMachineKpiRepository` | Implémente le port avec MongoDB |
 | Configuration | `KpiProperties`, `UseCaseConfig` | Lit `application.yml` et assemble le tout |
 
-## Les questions d'entretien du jour 2
+## Choix techniques
 
 **Pourquoi le kpi-service a sa propre copie de `MachineEvent` ?**
 Deux microservices ne partagent pas de code : sinon, modifier l'un obligerait à redéployer l'autre. Leur seul contrat commun est le **format JSON** du message Kafka.
@@ -83,9 +83,3 @@ Un document par machine, avec des champs qui peuvent évoluer, et des lectures e
 
 **Pourquoi `ErrorHandlingDeserializer` ?**
 Si un message illisible arrive dans le topic (un « poison pill »), le service le signale et passe au suivant, au lieu de rester bloqué à essayer de le lire en boucle.
-
-## Questions à te poser avant le jour 3
-
-1. Si on lance 2 instances du kpi-service, combien de partitions lit chacune ?
-2. Pourquoi la performance est-elle plafonnée à 100 % dans `MachineKpi.performance()` ?
-3. Que faudrait-il changer pour afficher les indicateurs en direct, sans recharger la page ? (C'est le jour 3.)

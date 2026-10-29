@@ -42,7 +42,7 @@ Puis ouvre :
 - **http://localhost:8090** (Kafka UI) → *Topics* → `machine-events` → *Messages* : les événements des machines arrivent chaque seconde ;
 - **http://localhost:8082/api/kpis** : les indicateurs calculés de chaque machine (TRS, disponibilité, performance, qualité…).
 
-### Lancer le simulateur depuis ton IDE (IntelliJ / VS Code)
+### Lancer un service depuis un IDE (IntelliJ / VS Code)
 
 ```bash
 docker compose up kafka kafka-ui    # Kafka seul dans Docker

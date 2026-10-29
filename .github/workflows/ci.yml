@@ -6,11 +6,16 @@ on:
   pull_request:
 
 jobs:
-  simulator:
+  test:
+    name: Tests ${{ matrix.service }}
     runs-on: ubuntu-latest
+    # Une "matrice" : le même job est lancé une fois par microservice.
+    strategy:
+      matrix:
+        service: [simulator, kpi-service]
     defaults:
       run:
-        working-directory: simulator
+        working-directory: ${{ matrix.service }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -18,5 +23,6 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+          cache-dependency-path: ${{ matrix.service }}/pom.xml
       - name: Compiler et lancer les tests
         run: mvn -B verify

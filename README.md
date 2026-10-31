@@ -3,15 +3,18 @@
 Plateforme de **supervision en temps réel d'une ligne de production**.
 Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**, un service **Spring Boot** calcule les indicateurs (TRS, taux de rebut, cadence, consommation) et un tableau de bord **Angular** les affiche en direct via **WebSocket**.
 
+![Tableau de bord FactoryPulse](docs/screenshots/dashboard.png)
+
 ## Architecture
 
 ```
-Simulateur (Spring Boot) ──► Kafka ──► Service KPI (Spring Boot) ──► MongoDB
-   machines, pannes,       topic            calcul TRS,                 │
-   rebuts, énergie     machine-events      rebut, cadence               ▼
-                                                │               WebSocket (STOMP)
-                                                ▼                       │
-                                     Prometheus + Grafana       Tableau de bord Angular
+Simulateur (Spring Boot) ──► Kafka ──► kpi-service (Spring Boot) ──► MongoDB
+  machines, pannes,      topic          calcul du TRS,
+  rebuts, énergie    machine-events     rebut, cadence
+                                              │
+                                 API REST + WebSocket (STOMP)
+                                              ▼
+                                 dashboard (Angular, servi par nginx)
 ```
 
 ## Avancement
@@ -20,7 +23,7 @@ Simulateur (Spring Boot) ──► Kafka ──► Service KPI (Spring Boot) ─
 |---|---|---|
 | Jour 1 | Simulateur de machines + Kafka + Docker Compose | ✅ |
 | Jour 2 | Service KPI : lecture Kafka, calcul du TRS, MongoDB, API REST, tests | ✅ |
-| Jour 3 | WebSocket + tableau de bord Angular temps réel | ⏳ |
+| Jour 3 | WebSocket + tableau de bord Angular temps réel | ✅ |
 | Jour 4 | Alertes, Prometheus / Grafana, CI complète | ⏳ |
 | Jour 5 | Résumé des incidents par IA (API Claude) | ⏳ |
 
@@ -39,6 +42,7 @@ docker compose up --build
 ```
 
 Puis ouvre :
+- **http://localhost:4300** : le **tableau de bord** en temps réel ;
 - **http://localhost:8090** (Kafka UI) → *Topics* → `machine-events` → *Messages* : les événements des machines arrivent chaque seconde ;
 - **http://localhost:8082/api/kpis** : les indicateurs calculés de chaque machine (TRS, disponibilité, performance, qualité…).
 
@@ -55,6 +59,7 @@ Puis lance `SimulatorApplication` depuis l'IDE : il se connecte à `localhost:90
 ```bash
 cd simulator   && mvn test && cd ..
 cd kpi-service && mvn test && cd ..
+cd dashboard   && npm install && npm run test:ci && cd ..
 ```
 
 ## Exemple d'événement publié
@@ -96,11 +101,12 @@ Ici, après une heure de simulation : **TRS de 80,7 %** (disponibilité 92,5 % �
 
 ## Stack
 
-Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · Docker Compose · JUnit 5 · GitHub Actions
-*(à venir : WebSocket STOMP, Angular, Prometheus, Grafana)*
+Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Angular 19 (signals) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
+*(à venir : Prometheus, Grafana)*
 
 ## Documentation
 
 - [Architecture : services et architecture hexagonale](docs/architecture.md)
 - [Jour 1 : le simulateur et Kafka expliqués](docs/jour-1.md)
 - [Jour 2 : le kpi-service et le calcul du TRS](docs/jour-2.md)
+- [Jour 3 : le tableau de bord temps réel (WebSocket + Angular)](docs/jour-3.md)

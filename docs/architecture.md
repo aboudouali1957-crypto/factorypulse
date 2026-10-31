@@ -22,7 +22,7 @@ FactoryPulse a deux niveaux d'architecture :
 | Service | Rôle | Communique avec |
 |---|---|---|
 | `simulator` | Simule les machines, publie les événements | Kafka (producteur) |
-| `kpi-service` | Lit les événements, calcule TRS, rebut, cadence, énergie ; les expose en REST | Kafka (consommateur), MongoDB, API REST (WebSocket au jour 3) |
+| `kpi-service` | Lit les événements, calcule TRS, rebut, cadence, énergie ; les expose en REST | Kafka (consommateur), MongoDB, API REST, WebSocket |
 | `dashboard` | Affiche les indicateurs en temps réel | kpi-service (WebSocket) |
 
 **Pourquoi ce découpage ?**

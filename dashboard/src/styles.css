@@ -1,0 +1,41 @@
+/*
+ * Thème du tableau de bord : sombre, comme un écran de salle de supervision.
+ * Toutes les couleurs sont des variables : on les change ici, à un seul endroit.
+ */
+:root {
+  color-scheme: dark;
+
+  --surface-0: #121211;          /* fond de page */
+  --surface-1: #1a1a19;          /* cartes */
+  --surface-2: #242422;          /* zones internes, pistes des barres */
+  --border: #2f2f2c;
+
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8f8e86;
+
+  --series-1: #3987e5;           /* la donnée (TRS, barres, courbe) */
+
+  /* Couleurs d'état : toujours accompagnées d'une icône et d'un libellé */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+
+  --radius: 12px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}

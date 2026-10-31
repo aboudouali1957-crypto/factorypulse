@@ -1,0 +1,46 @@
+<header>
+  <div class="title">
+    <span class="id">{{ s().machineId }}</span>
+    <h2>{{ name() }}</h2>
+  </div>
+  @if (s().running) {
+    <span class="chip good"><span aria-hidden="true">●</span> En marche</span>
+  } @else {
+    <span class="chip critical"><span aria-hidden="true">✕</span> En panne</span>
+  }
+</header>
+
+<div class="main">
+  <div class="gauge">
+    <fp-oee-gauge [value]="s().oee" />
+    <span class="level" [class]="'level ' + level()">
+      <span aria-hidden="true">{{ level() === 'good' ? '▲' : level() === 'warning' ? '■' : '▼' }}</span>
+      {{ levelLabel() }}
+    </span>
+  </div>
+
+  <ul class="factors">
+    @for (f of factors(); track f.label) {
+      <li>
+        <div class="factor-head">
+          <span>{{ f.label }}</span>
+          <span class="num">{{ percent(f.value) }}</span>
+        </div>
+        <div class="bar-track"><div class="bar" [style.width.%]="f.value * 100"></div></div>
+      </li>
+    }
+  </ul>
+</div>
+
+<dl class="stats">
+  <div><dt>Pièces</dt><dd class="num">{{ integer(s().piecesProduced) }}</dd></div>
+  <div><dt>Rebuts</dt><dd class="num">{{ integer(s().rejectedPieces) }} <small>({{ percent(s().rejectRate) }})</small></dd></div>
+  <div><dt>Cadence</dt><dd class="num">{{ integer(s().throughputPerHour) }} <small>/h</small></dd></div>
+  <div><dt>Pannes</dt><dd class="num">{{ integer(s().downCount) }}</dd></div>
+  <div><dt>Énergie</dt><dd class="num">{{ decimal(s().energyKwh) }} <small>kWh</small></dd></div>
+</dl>
+
+<section class="trend">
+  <h3>Évolution du TRS</h3>
+  <fp-sparkline [points]="machine().history" />
+</section>

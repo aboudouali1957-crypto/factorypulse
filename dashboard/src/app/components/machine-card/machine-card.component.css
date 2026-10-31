@@ -1,0 +1,140 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.id {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+h2 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.chip.good span,
+.level.good span { color: var(--status-good); }
+.chip.critical span,
+.level.critical span { color: var(--status-critical); }
+.level.warning span { color: var(--status-warning); }
+
+.chip.critical { box-shadow: inset 0 0 0 1px var(--status-critical); }
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.level {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.factors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.factor-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.factor-head .num { color: var(--text-primary); }
+
+.bar-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+  transition: width 400ms ease;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+dt {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+dd small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.trend h3 {
+  margin: 0 0 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+@media (max-width: 420px) {
+  .main { flex-direction: column; align-items: stretch; }
+}

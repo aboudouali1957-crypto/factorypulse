@@ -79,5 +79,15 @@ services:
       mongo:
         condition: service_healthy
 
+  # Le tableau de bord Angular, servi par nginx (jour 3) : http://localhost:4300
+  # nginx redirige /api et /ws vers le kpi-service.
+  dashboard:
+    build: ./dashboard
+    container_name: factorypulse-dashboard
+    ports:
+      - "4300:80"
+    depends_on:
+      - kpi-service
+
 volumes:
   mongo-data:

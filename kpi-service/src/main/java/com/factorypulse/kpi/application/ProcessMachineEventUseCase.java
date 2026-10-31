@@ -1,5 +1,6 @@
 package com.factorypulse.kpi.application;
 
+import com.factorypulse.kpi.application.port.out.KpiUpdatePublisher;
 import com.factorypulse.kpi.application.port.out.MachineKpiRepository;
 import com.factorypulse.kpi.domain.KpiSnapshot;
 import com.factorypulse.kpi.domain.MachineEvent;
@@ -13,26 +14,31 @@ import java.util.Optional;
  *
  * 1. retrouver les indicateurs de la machine (ou les créer au premier événement) ;
  * 2. leur appliquer l'événement ;
- * 3. les sauvegarder.
+ * 3. les sauvegarder ;
+ * 4. prévenir l'extérieur (le tableau de bord) que les indicateurs ont changé.
  *
- * Java pur : aucune dépendance à Kafka, MongoDB ou Spring.
+ * Java pur : aucune dépendance à Kafka, MongoDB, WebSocket ou Spring.
  */
 public class ProcessMachineEventUseCase {
 
     private final Map<String, Double> idealCycleSecondsByMachine;
     private final MachineKpiRepository repository;
+    private final KpiUpdatePublisher publisher;
 
     /**
      * @param idealCycleSecondsByMachine temps de cycle idéal de chaque machine connue, ex. {"M1": 2.0}
      * @param repository                 où lire et sauvegarder les indicateurs
+     * @param publisher                  à qui signaler chaque mise à jour
      */
     public ProcessMachineEventUseCase(Map<String, Double> idealCycleSecondsByMachine,
-                                      MachineKpiRepository repository) {
+                                      MachineKpiRepository repository,
+                                      KpiUpdatePublisher publisher) {
         if (idealCycleSecondsByMachine == null || idealCycleSecondsByMachine.isEmpty()) {
             throw new IllegalArgumentException("Il faut au moins une machine connue (temps de cycle idéal)");
         }
         this.idealCycleSecondsByMachine = Map.copyOf(idealCycleSecondsByMachine);
         this.repository = repository;
+        this.publisher = publisher;
     }
 
     /**
@@ -50,7 +56,10 @@ public class ProcessMachineEventUseCase {
 
         kpi.apply(event);
         repository.save(kpi);
-        return Optional.of(kpi.snapshot());
+
+        KpiSnapshot snapshot = kpi.snapshot();
+        publisher.publish(snapshot);
+        return Optional.of(snapshot);
     }
 
     public boolean isKnownMachine(String machineId) {

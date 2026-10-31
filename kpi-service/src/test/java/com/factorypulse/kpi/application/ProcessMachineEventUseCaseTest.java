@@ -1,5 +1,6 @@
 package com.factorypulse.kpi.application;
 
+import com.factorypulse.kpi.application.port.out.KpiUpdatePublisher;
 import com.factorypulse.kpi.application.port.out.MachineKpiRepository;
 import com.factorypulse.kpi.domain.EventType;
 import com.factorypulse.kpi.domain.KpiSnapshot;
@@ -43,6 +44,16 @@ class ProcessMachineEventUseCaseTest {
         }
     }
 
+    /** Faux adaptateur : garde les mises à jour publiées dans une liste au lieu de les envoyer par WebSocket. */
+    static class InMemoryPublisher implements KpiUpdatePublisher {
+        final List<KpiSnapshot> published = new ArrayList<>();
+
+        @Override
+        public void publish(KpiSnapshot snapshot) {
+            published.add(snapshot);
+        }
+    }
+
     private static final long T0 = 1_700_000_000_000L;
     private static final Map<String, Double> CYCLES = Map.of("M1", 2.0, "M2", 3.0);
 
@@ -53,7 +64,7 @@ class ProcessMachineEventUseCaseTest {
     @Test
     void creeLaMachineAuPremierEvenement_puisLaMetAJour() {
         InMemoryRepository repo = new InMemoryRepository();
-        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo);
+        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher());
 
         useCase.handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
         Optional<KpiSnapshot> snapshot = useCase.handle(event("M1", EventType.PIECE_PRODUCED, 2, false));
@@ -66,9 +77,23 @@ class ProcessMachineEventUseCaseTest {
     }
 
     @Test
+    void publieChaqueMiseAJour_maisPasLesMachinesInconnues() {
+        InMemoryRepository repo = new InMemoryRepository();
+        InMemoryPublisher publisher = new InMemoryPublisher();
+        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo, publisher);
+
+        useCase.handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
+        useCase.handle(event("M1", EventType.PIECE_PRODUCED, 2, true));
+        useCase.handle(event("M9", EventType.PIECE_PRODUCED, 2, true));
+
+        assertThat(publisher.published).hasSize(2);
+        assertThat(publisher.published.get(1).piecesProduced()).isEqualTo(2);
+    }
+
+    @Test
     void separeLesIndicateursDeChaqueMachine() {
         InMemoryRepository repo = new InMemoryRepository();
-        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo);
+        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher());
 
         useCase.handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
         useCase.handle(event("M2", EventType.PIECE_PRODUCED, 0, true));
@@ -81,7 +106,7 @@ class ProcessMachineEventUseCaseTest {
     @Test
     void ignoreUneMachineInconnue() {
         InMemoryRepository repo = new InMemoryRepository();
-        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo);
+        ProcessMachineEventUseCase useCase = new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher());
 
         Optional<KpiSnapshot> result = useCase.handle(event("M9", EventType.PIECE_PRODUCED, 0, true));
 
@@ -92,10 +117,10 @@ class ProcessMachineEventUseCaseTest {
     @Test
     void reprendLeCalculApresUnRedemarrage() {
         InMemoryRepository repo = new InMemoryRepository();
-        new ProcessMachineEventUseCase(CYCLES, repo).handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
+        new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher()).handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
 
         // "Redémarrage" : un nouveau cas d'usage, mais le même stockage.
-        ProcessMachineEventUseCase afterRestart = new ProcessMachineEventUseCase(CYCLES, repo);
+        ProcessMachineEventUseCase afterRestart = new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher());
         Optional<KpiSnapshot> snapshot = afterRestart.handle(event("M1", EventType.PIECE_PRODUCED, 2, true));
 
         assertThat(snapshot.get().piecesProduced()).isEqualTo(2);
@@ -104,7 +129,7 @@ class ProcessMachineEventUseCaseTest {
     @Test
     void getKpis_renvoieToutesLesMachinesTriees() {
         InMemoryRepository repo = new InMemoryRepository();
-        ProcessMachineEventUseCase process = new ProcessMachineEventUseCase(CYCLES, repo);
+        ProcessMachineEventUseCase process = new ProcessMachineEventUseCase(CYCLES, repo, new InMemoryPublisher());
         process.handle(event("M2", EventType.PIECE_PRODUCED, 0, true));
         process.handle(event("M1", EventType.PIECE_PRODUCED, 0, true));
 

@@ -1,0 +1,17 @@
+# Point d'entrée public en production : HTTPS automatique (certificat Let's Encrypt).
+# HTTPS est obligatoire : la connexion Keycloak (PKCE) utilise des fonctions de chiffrement
+# que les navigateurs n'autorisent que sur une page sécurisée.
+#
+#   https://<domaine>/auth/...  → Keycloak (connexion)
+#   https://<domaine>/...       → tableau de bord (nginx, qui redirige lui-même /api et /ws vers les services)
+{$FP_DOMAIN} {
+	encode gzip
+
+	handle /auth/* {
+		reverse_proxy keycloak:8080
+	}
+
+	handle {
+		reverse_proxy dashboard:80
+	}
+}

@@ -1,0 +1,88 @@
+# Surcharge pour la PRODUCTION (serveur cloud), à combiner avec docker-compose.yml :
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Les valeurs viennent du fichier .env (voir .env.example) :
+#   FP_DOMAIN           domaine public, ex. 13-38-1-25.sslip.io
+#   KC_ADMIN_PASSWORD   mot de passe de la console d'administration Keycloak
+#
+# Différences avec le développement :
+#   - un seul point d'entrée public, Caddy (ports 80 et 443, HTTPS automatique) ;
+#   - plus aucun autre port publié : Kafka, MongoDB, les API et Keycloak ne sont joignables
+#     que par le réseau Docker interne (ou via Caddy) ;
+#   - Keycloak servi sous /auth, avec un mot de passe administrateur secret ;
+#   - mémoire de chaque Java limitée, pour tenir sur un serveur de 4 Go.
+
+services:
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    container_name: factorypulse-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      FP_DOMAIN: ${FP_DOMAIN:?Renseigne FP_DOMAIN dans le fichier .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - dashboard
+      - keycloak
+
+  kafka:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx384m"
+
+  # L'interface Kafka n'est pas lancée en production (profil "debug" : lancement manuel seulement).
+  kafka-ui:
+    profiles: ["debug"]
+    ports: !reset []
+
+  simulator:
+    restart: unless-stopped
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx192m"
+
+  mongo:
+    restart: unless-stopped
+    ports: !reset []
+
+  keycloak:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?Renseigne KC_ADMIN_PASSWORD dans le fichier .env}
+      KC_HOSTNAME: https://${FP_DOMAIN}/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
+      FP_PUBLIC_URL: https://${FP_DOMAIN}
+      JAVA_OPTS_KC_HEAP: "-Xms256m -Xmx512m"
+
+  kpi-service:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      KEYCLOAK_ISSUER: https://${FP_DOMAIN}/auth/realms/factorypulse
+      KEYCLOAK_JWKS: http://keycloak:8080/auth/realms/factorypulse/protocol/openid-connect/certs
+      ALLOWED_ORIGINS: https://${FP_DOMAIN}
+      JAVA_TOOL_OPTIONS: "-Xmx256m"
+
+  alert-service:
+    restart: unless-stopped
+    ports: !reset []
+    environment:
+      KEYCLOAK_ISSUER: https://${FP_DOMAIN}/auth/realms/factorypulse
+      KEYCLOAK_JWKS: http://keycloak:8080/auth/realms/factorypulse/protocol/openid-connect/certs
+      ALLOWED_ORIGINS: https://${FP_DOMAIN}
+      JAVA_TOOL_OPTIONS: "-Xmx256m"
+
+  dashboard:
+    restart: unless-stopped
+    ports: !reset []
+
+volumes:
+  caddy-data:

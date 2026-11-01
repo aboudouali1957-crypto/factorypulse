@@ -9,6 +9,10 @@ package com.factorypulse.kpi.domain;
  * combien de temps s'est écoulé depuis le précédent, et on ajoute ce temps au compteur
  * "temps de marche" ou "temps d'arrêt" selon l'état. Ensuite on applique l'événement
  * (pièce, panne, réparation, énergie).
+ *
+ * Deux séries d'indicateurs sont tenues en parallèle :
+ *  - les indicateurs CUMULÉS, depuis le premier événement ;
+ *  - les indicateurs RÉCENTS, sur les 15 dernières minutes ({@link RecentWindow}).
  */
 public class MachineKpi {
 
@@ -29,6 +33,7 @@ public class MachineKpi {
     private long goodPieces;
     private double energyKwh;
     private long downCount;
+    private RecentWindow recentWindow = new RecentWindow();
 
     public MachineKpi(String machineId, double idealCycleSeconds) {
         if (machineId == null || machineId.isBlank()) {
@@ -52,6 +57,7 @@ public class MachineKpi {
         kpi.goodPieces = state.goodPieces();
         kpi.energyKwh = state.energyKwh();
         kpi.downCount = state.downCount();
+        kpi.recentWindow = new RecentWindow(state.recentMinutes());
         return kpi;
     }
 
@@ -66,10 +72,12 @@ public class MachineKpi {
 
         switch (event.type()) {
             case PIECE_PRODUCED -> {
+                boolean good = Boolean.TRUE.equals(event.good());
                 piecesProduced++;
-                if (Boolean.TRUE.equals(event.good())) {
+                if (good) {
                     goodPieces++;
                 }
+                recentWindow.addPiece(event.timestamp(), good);
             }
             case MACHINE_DOWN -> {
                 if (running) {
@@ -99,8 +107,10 @@ public class MachineKpi {
         if (elapsed <= MAX_GAP_MILLIS) {
             if (running) {
                 runMillis += elapsed;
+                recentWindow.addRunning(timestamp, elapsed);
             } else {
                 downMillis += elapsed;
+                recentWindow.addDown(timestamp, elapsed);
             }
         }
         lastTimestamp = timestamp;
@@ -110,22 +120,17 @@ public class MachineKpi {
 
     /** Disponibilité = temps de marche / (temps de marche + temps d'arrêt). */
     public double availability() {
-        long total = runMillis + downMillis;
-        return total == 0 ? 0 : (double) runMillis / total;
+        return OeeFormulas.availability(runMillis, downMillis);
     }
 
     /** Performance = (pièces produites × cycle idéal) / temps de marche, plafonnée à 100 %. */
     public double performance() {
-        if (runMillis == 0) {
-            return 0;
-        }
-        double idealMillis = piecesProduced * idealCycleSeconds * 1000;
-        return Math.min(1.0, idealMillis / runMillis);
+        return OeeFormulas.performance(piecesProduced, idealCycleSeconds, runMillis);
     }
 
     /** Qualité = pièces bonnes / pièces produites. */
     public double quality() {
-        return piecesProduced == 0 ? 0 : (double) goodPieces / piecesProduced;
+        return OeeFormulas.quality(goodPieces, piecesProduced);
     }
 
     /** TRS = disponibilité × performance × qualité. */
@@ -151,12 +156,17 @@ public class MachineKpi {
     public KpiSnapshot snapshot() {
         return new KpiSnapshot(machineId, running, availability(), performance(), quality(), oee(),
                 piecesProduced, goodPieces, rejectedPieces(), rejectRate(), throughputPerHour(),
-                energyKwh, downCount, lastTimestamp);
+                energyKwh, downCount, lastTimestamp, recent());
+    }
+
+    /** Les indicateurs sur les 15 dernières minutes. */
+    public RecentKpi recent() {
+        return recentWindow.kpi(idealCycleSeconds);
     }
 
     public MachineKpiState state() {
         return new MachineKpiState(machineId, idealCycleSeconds, running, lastTimestamp,
-                runMillis, downMillis, piecesProduced, goodPieces, energyKwh, downCount);
+                runMillis, downMillis, piecesProduced, goodPieces, energyKwh, downCount, recentWindow.buckets());
     }
 
     public String machineId() {

@@ -1,9 +1,10 @@
 package com.factorypulse.kpi.domain;
 
 /**
- * Les indicateurs d'une machine à un instant donné. C'est ce qu'on affiche (API REST, puis tableau de bord au jour 3).
+ * Les indicateurs d'une machine à un instant donné. C'est ce qu'on affiche (API REST et tableau de bord).
  *
- * Les ratios sont entre 0 et 1 (0,85 = 85 %).
+ * Les ratios sont entre 0 et 1 (0,85 = 85 %). Les indicateurs à la racine sont CUMULÉS depuis le début ;
+ * {@code recent} donne les mêmes indicateurs sur les 15 dernières minutes.
  *
  * @param machineId         identifiant de la machine
  * @param running           la machine tourne-t-elle actuellement ?
@@ -19,6 +20,7 @@ package com.factorypulse.kpi.domain;
  * @param energyKwh         énergie totale consommée, en kWh
  * @param downCount         nombre de pannes
  * @param updatedAt         date du dernier événement pris en compte (millisecondes epoch)
+ * @param recent            indicateurs sur les 15 dernières minutes (fenêtre glissante)
  */
 public record KpiSnapshot(
         String machineId,
@@ -34,5 +36,6 @@ public record KpiSnapshot(
         double throughputPerHour,
         double energyKwh,
         long downCount,
-        Long updatedAt) {
+        Long updatedAt,
+        RecentKpi recent) {
 }

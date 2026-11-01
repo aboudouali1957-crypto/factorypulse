@@ -5,6 +5,8 @@ Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie).
 
 ![Tableau de bord FactoryPulse](docs/screenshots/dashboard.png)
 
+> **Déployé sur AWS** (EC2, Docker Compose, HTTPS automatique avec Caddy). Le serveur est allumé pour les démonstrations : démo en direct sur demande.
+
 ## Architecture
 
 ```
@@ -30,7 +32,7 @@ Le kpi-service et l'alert-service lisent **le même topic** avec deux *consumer 
 | Jour 4 | TRS sur 15 min glissantes + microservice d'alertes + panneau Alertes | ✅ |
 | Jour 5 | Sécurité : connexion et rôles avec Keycloak (OAuth2 / OpenID Connect), API et WebSocket protégés | ✅ |
 | Jour 6 | Actions selon le rôle : prise en charge des alertes, interventions de maintenance, historique | ✅ |
-| Jour 7 | Tests d'intégration (Testcontainers) et mise en ligne | ⏳ |
+| Jour 7 | Tests d'intégration avec un vrai Kafka et un vrai MongoDB (Testcontainers) + configuration de mise en ligne (HTTPS) | ✅ |
 
 Deux niveaux d'architecture :
 - **entre les services** : architecture **orientée événements**, avec des services indépendants reliés par Kafka ;
@@ -71,11 +73,17 @@ Puis lance `SimulatorApplication` depuis l'IDE : il se connecte à `localhost:90
 ### Lancer les tests
 
 ```bash
-cd simulator   && mvn test && cd ..
-cd kpi-service && mvn test && cd ..
-cd alert-service && mvn test && cd ..
-cd dashboard   && npm install && npm run test:ci && cd ..
+cd simulator     && mvn test   && cd ..
+cd kpi-service   && mvn verify && cd ..   # unitaires + intégration (Docker doit tourner)
+cd alert-service && mvn verify && cd ..
+cd dashboard     && npm install && npm run test:ci && cd ..
 ```
+
+`mvn test` lance seulement les tests unitaires (rapides, sans Docker). `mvn verify` ajoute les **tests d'intégration** (`*IT`), qui démarrent un vrai Kafka et un vrai MongoDB avec Testcontainers. Le CI GitHub lance `mvn verify` à chaque push.
+
+### Mise en ligne
+
+Le projet est déployé sur un serveur **AWS EC2** avec `docker-compose.prod.yml` : un seul point d'entrée public (Caddy, HTTPS automatique), Keycloak servi sous `/auth`, et aucun autre port exposé (Kafka, MongoDB et les API restent sur le réseau Docker interne). Guide pas à pas : [docs/deploiement.md](docs/deploiement.md).
 
 ## Exemple d'événement publié
 
@@ -141,8 +149,7 @@ Règles : une panne lève une alerte, qui devient **critique** au-delà de 30 s 
 
 ## Stack
 
-Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Spring Security · OAuth2 / OpenID Connect · JWT · Keycloak · Angular 19 (signals, Reactive Forms) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
-*(à venir : Testcontainers)*
+Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Spring Security · OAuth2 / OpenID Connect · JWT · Keycloak · Angular 19 (signals, Reactive Forms) · TypeScript · nginx · Docker Compose · Caddy (HTTPS) · AWS EC2 · JUnit 5 · Testcontainers · Jasmine/Karma · GitHub Actions
 
 ## Documentation
 
@@ -153,3 +160,5 @@ Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · S
 - [Jour 4 : TRS sur 15 minutes et microservice d'alertes](docs/jour-4.md)
 - [Jour 5 : sécurité avec Keycloak (OAuth2, JWT, rôles)](docs/jour-5.md)
 - [Jour 6 : actions selon le rôle (alertes, interventions)](docs/jour-6.md)
+- [Jour 7 : tests d'intégration et mise en ligne](docs/jour-7.md)
+- [Mise en ligne sur AWS, pas à pas](docs/deploiement.md)

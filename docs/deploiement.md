@@ -15,7 +15,9 @@ Durée : environ 1 h la première fois, dont 15 à 20 minutes de construction de
 
 ## 0. Vérifier les coûts AWS (à faire en premier)
 
-Le serveur conseillé (**t3.medium**, 4 Go de RAM) n'est **pas** dans l'offre gratuite classique : il est payé avec les **crédits** du compte, ou facturé environ **30 $/mois** sans crédits.
+FactoryPulse a besoin d'environ 3 Go de mémoire. Sur un compte créé après juillet 2025 (offre gratuite à crédits), le plus petit serveur autorisé qui convient est le **c7i-flex.large** (2 vCPU, 4 Go), payé avec les **crédits** du compte : environ 0,085 $ de l'heure, soit environ 65 $ par mois s'il reste allumé en continu.
+
+**Conseil** : allume le serveur seulement quand tu en as besoin (démonstration, entretien) et arrête-le le reste du temps (*Stop*). Arrêté, il ne coûte presque plus rien (stockage et adresse IP seulement).
 
 1. Console AWS → **Billing and Cost Management** → **Credits** : regarde s'il te reste des crédits et jusqu'à quand.
 2. **Billing and Cost Management** → **Budgets** → *Create budget* → modèle **Zero spend budget** (ou *Monthly cost budget* à 5 $) avec ton e-mail. Tu seras prévenu dès la moindre dépense.
@@ -29,7 +31,7 @@ Console AWS → **EC2** → en haut à droite, choisis une région proche (ex. *
 |---|---|
 | Name | `factorypulse` |
 | Image (AMI) | **Ubuntu Server 24.04 LTS**, architecture **64-bit (x86)** |
-| Instance type | **t3.medium** (2 vCPU, 4 Go) |
+| Instance type | **c7i-flex.large** (2 vCPU, 4 Go, marqué *Free tier eligible*) |
 | Key pair | *Create new key pair* → nom `factorypulse`, type RSA, format **.pem** → le fichier se télécharge : garde-le précieusement |
 | Network settings → Firewall | *Create security group*, coche **Allow SSH traffic from My IP**, **Allow HTTPS traffic from the internet**, **Allow HTTP traffic from the internet** |
 | Configure storage | **30 GiB**, type gp3 |

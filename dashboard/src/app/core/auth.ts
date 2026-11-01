@@ -36,6 +36,10 @@ function isRole(value: string): value is Role {
   return value in ROLE_LABELS;
 }
 
+export function hasRole(user: CurrentUser, role: Role): boolean {
+  return user.roles.includes(role);
+}
+
 /** Libellé des rôles, ex. "Responsable". */
 export function rolesLabel(roles: Role[]): string {
   return roles.length === 0 ? 'Aucun rôle' : roles.map((r) => ROLE_LABELS[r]).join(', ');

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { Client } from '@stomp/stompjs';
+import { Observable, tap } from 'rxjs';
 import { activeAlerts, activeCountByMachine, resolvedAlerts, upsertAlert } from './alert-state';
 import { Alert } from './alert.model';
 import { ConnectionState } from './kpi.model';
@@ -56,6 +57,13 @@ export class AlertStore implements OnDestroy {
       next: (alerts) => alerts.forEach((a) => this.receive(a)),
       error: () => this.connection.set('disconnected'),
     });
+  }
+
+  /** Prise en charge d'une alerte (rôle OPERATEUR). Le serveur renvoie la nouvelle version de l'alerte. */
+  acknowledge(alertId: string): Observable<Alert> {
+    return this.http
+      .post<Alert>(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`, null)
+      .pipe(tap((alert) => this.receive(alert)));
   }
 
   private receive(alert: Alert): void {

@@ -8,6 +8,8 @@ export interface Alert {
   raisedAt: number;           // millisecondes epoch
   updatedAt: number;
   resolvedAt: number | null;  // null tant que l'alerte est active
+  acknowledgedBy: string | null;  // opérateur qui a pris l'alerte en charge
+  acknowledgedAt: number | null;
 }
 
 export type AlertType = 'DOWNTIME' | 'HIGH_REJECT_RATE';

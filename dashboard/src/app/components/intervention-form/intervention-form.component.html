@@ -1,0 +1,56 @@
+<dialog #dialog aria-labelledby="intervention-title" (cancel)="$event.preventDefault(); close()">
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h2 id="intervention-title">Saisir une intervention</h2>
+    @if (alertId()) {
+      <p class="linked">Liée à l'alerte <span class="num">{{ alertId() }}</span></p>
+    }
+
+    <label>
+      Machine
+      <select formControlName="machineId">
+        @for (m of machines; track m.id) {
+          <option [value]="m.id">{{ m.id }} – {{ m.name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Cause
+      <select formControlName="cause">
+        @for (c of causes; track c.value) {
+          <option [value]="c.value">{{ c.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Action réalisée
+      <textarea formControlName="description" rows="4" [attr.maxlength]="maxDescription"
+                placeholder="Ex. : courroie remplacée, capteur nettoyé…"
+                [attr.aria-invalid]="invalid('description')"></textarea>
+      @if (invalid('description')) {
+        <span class="error">La description est obligatoire ({{ maxDescription }} caractères maximum).</span>
+      }
+    </label>
+
+    <label>
+      Durée (minutes)
+      <input type="number" formControlName="durationMinutes" min="1" [attr.max]="maxDuration"
+             [attr.aria-invalid]="invalid('durationMinutes')" />
+      @if (invalid('durationMinutes')) {
+        <span class="error">Entre 1 et {{ maxDuration }} minutes.</span>
+      }
+    </label>
+
+    @if (serverError()) {
+      <p class="error server" role="alert">{{ serverError() }}</p>
+    }
+
+    <div class="actions">
+      <button type="button" class="secondary" (click)="close()">Annuler</button>
+      <button type="submit" class="primary" [disabled]="submitting()">
+        {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+</dialog>

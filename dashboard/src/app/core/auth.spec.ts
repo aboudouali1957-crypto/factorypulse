@@ -1,4 +1,4 @@
-import { rolesLabel, userFromClaims } from './auth';
+import { hasRole, rolesLabel, userFromClaims } from './auth';
 
 describe('userFromClaims', () => {
   it('lit le nom et les rôles FactoryPulse du jeton', () => {
@@ -19,6 +19,14 @@ describe('userFromClaims', () => {
 
   it('résiste à un jeton vide', () => {
     expect(userFromClaims(undefined)).toEqual({ username: 'inconnu', displayName: 'inconnu', roles: [] });
+  });
+});
+
+describe('hasRole', () => {
+  it('indique si l\'utilisateur a un rôle', () => {
+    const operateur = userFromClaims({ preferred_username: 'operateur', realm_access: { roles: ['OPERATEUR'] } });
+    expect(hasRole(operateur, 'OPERATEUR')).toBeTrue();
+    expect(hasRole(operateur, 'RESPONSABLE')).toBeFalse();
   });
 });
 

@@ -1,0 +1,58 @@
+<header>
+  <h2>Interventions de maintenance</h2>
+  <div class="refresh">
+    @if (service.lastLoaded(); as at) {
+      <span class="updated num">Mis à jour à {{ time(at) }}</span>
+    }
+    <button type="button" [disabled]="service.loading()" (click)="service.loadHistory()">
+      {{ service.loading() ? 'Actualisation…' : 'Actualiser' }}
+    </button>
+  </div>
+</header>
+
+@if (service.error()) {
+  <p class="error" role="alert">{{ service.error() }}</p>
+}
+
+@if (service.history().length === 0) {
+  <p class="none">Aucune intervention enregistrée pour l'instant.</p>
+} @else {
+  <section class="stats" aria-label="Bilan par machine">
+    @for (s of service.stats(); track s.machineId) {
+      <div class="stat">
+        <span class="machine">{{ s.machineId }} {{ machineName(s.machineId) }}</span>
+        <span class="value num">{{ minutes(s.totalMinutes) }}</span>
+        <span class="detail">{{ s.count }} intervention{{ s.count > 1 ? 's' : '' }}
+          @if (s.mainCause) { · surtout {{ causeLabels[s.mainCause].toLowerCase() }} }
+        </span>
+      </div>
+    }
+  </section>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Machine</th>
+          <th scope="col">Cause</th>
+          <th scope="col">Action réalisée</th>
+          <th scope="col" class="right">Durée</th>
+          <th scope="col">Par</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (i of service.history(); track i.id) {
+          <tr>
+            <td class="num nowrap">{{ date(i.createdAt) }}</td>
+            <td class="nowrap">{{ i.machineId }} {{ machineName(i.machineId) }}</td>
+            <td>{{ causeLabels[i.cause] }}</td>
+            <td class="description">{{ i.description }}</td>
+            <td class="num right nowrap">{{ minutes(i.durationMinutes) }}</td>
+            <td>{{ i.performedBy }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

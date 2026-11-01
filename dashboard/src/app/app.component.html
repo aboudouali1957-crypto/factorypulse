@@ -45,4 +45,8 @@
     }
     <fp-alerts-panel />
   </div>
+
+  @if (auth.hasRole('RESPONSABLE')) {
+    <fp-interventions-history />
+  }
 </main>

@@ -4,7 +4,7 @@ import { Alert } from './alert.model';
 function alert(partial: Partial<Alert>): Alert {
   return {
     id: 'M1-DOWNTIME-1000', machineId: 'M1', type: 'DOWNTIME', severity: 'WARNING', message: 'M1 en panne',
-    raisedAt: 1000, updatedAt: 1000, resolvedAt: null,
+    raisedAt: 1000, updatedAt: 1000, resolvedAt: null, acknowledgedBy: null, acknowledgedAt: null,
     ...partial,
   };
 }

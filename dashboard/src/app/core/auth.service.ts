@@ -1,6 +1,8 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import Keycloak from 'keycloak-js';
-import { CurrentUser, KEYCLOAK_CLIENT_ID, KEYCLOAK_REALM, keycloakUrl, rolesLabel, TokenClaims, userFromClaims } from './auth';
+import {
+  CurrentUser, hasRole, KEYCLOAK_CLIENT_ID, KEYCLOAK_REALM, keycloakUrl, Role, rolesLabel, TokenClaims, userFromClaims,
+} from './auth';
 
 /** L'instance Keycloak, créée et connectée AVANT le démarrage d'Angular (voir main.ts). */
 export const KEYCLOAK = new InjectionToken<Keycloak>('KEYCLOAK');
@@ -25,6 +27,14 @@ export class AuthService {
 
   readonly user: CurrentUser = userFromClaims(this.keycloak.tokenParsed as TokenClaims | undefined);
   readonly rolesLabel = rolesLabel(this.user.roles);
+
+  /**
+   * Le rôle sert seulement à afficher ou cacher des boutons : la vraie vérification
+   * est faite par le serveur (403 si le rôle manque), car tout ce qui tourne dans le navigateur peut être modifié.
+   */
+  hasRole(role: Role): boolean {
+    return hasRole(this.user, role);
+  }
 
   /**
    * Un jeton d'accès valide. Les jetons expirent vite (5 min) : s'il expire dans moins de 30 s,

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AlertsPanelComponent } from './components/alerts-panel/alerts-panel.component';
+import { InterventionsHistoryComponent } from './components/interventions-history/interventions-history.component';
 import { MachineCardComponent } from './components/machine-card/machine-card.component';
 import { StatTileComponent } from './components/stat-tile/stat-tile.component';
 import { formatDecimal, formatInteger, formatPercent, formatTime } from './core/format';
@@ -10,7 +11,7 @@ import { KpiStore } from './core/kpi-store.service';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AlertsPanelComponent, MachineCardComponent, StatTileComponent],
+  imports: [AlertsPanelComponent, InterventionsHistoryComponent, MachineCardComponent, StatTileComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

@@ -12,7 +12,7 @@ jobs:
     # Une "matrice" : le même job est lancé une fois par microservice Java.
     strategy:
       matrix:
-        service: [simulator, kpi-service]
+        service: [simulator, kpi-service, alert-service]
     defaults:
       run:
         working-directory: ${{ matrix.service }}

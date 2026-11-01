@@ -1,7 +1,7 @@
 # FactoryPulse
 
 Plateforme de **supervision en temps réel d'une ligne de production**.
-Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**. Un service **Spring Boot** calcule les indicateurs (TRS cumulé et sur 15 minutes glissantes, taux de rebut, cadence, consommation), un autre détecte les **alertes** (pannes prolongées, rebuts anormaux), et un tableau de bord **Angular** affiche le tout en direct via **WebSocket**.
+Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**. Un service **Spring Boot** calcule les indicateurs (TRS cumulé et sur 15 minutes glissantes, taux de rebut, cadence, consommation), un autre détecte les **alertes** (pannes prolongées, rebuts anormaux), et un tableau de bord **Angular** affiche le tout en direct via **WebSocket**. L'accès est protégé par **Keycloak** (OAuth2 / OpenID Connect) avec deux rôles : opérateur et responsable.
 
 ![Tableau de bord FactoryPulse](docs/screenshots/dashboard.png)
 
@@ -18,6 +18,8 @@ Simulateur (Spring Boot) ──► Kafka ────┤     calcul du TRS, rebu
 
 Le kpi-service et l'alert-service lisent **le même topic** avec deux *consumer groups* différents : chacun reçoit tous les événements, sans dépendre de l'autre.
 
+**Sécurité** : le dashboard connecte l'utilisateur avec **Keycloak** et envoie un jeton JWT à chaque appel (API REST et WebSocket). Les services vérifient ce jeton avant de répondre.
+
 ## Avancement
 
 | Étape | Contenu | État |
@@ -26,9 +28,9 @@ Le kpi-service et l'alert-service lisent **le même topic** avec deux *consumer 
 | Jour 2 | Service KPI : lecture Kafka, calcul du TRS, MongoDB, API REST, tests | ✅ |
 | Jour 3 | WebSocket + tableau de bord Angular temps réel | ✅ |
 | Jour 4 | TRS sur 15 min glissantes + microservice d'alertes + panneau Alertes | ✅ |
-| Jour 5 | Tests d'intégration avec un vrai Kafka et un vrai MongoDB (Testcontainers) | ⏳ |
-| Jour 6 | Sécurité : authentification et rôles (Keycloak, OAuth2 / OpenID Connect) | ⏳ |
-| Jour 7 | Montée en charge (plusieurs instances) + supervision Prometheus / Grafana | ⏳ |
+| Jour 5 | Sécurité : connexion et rôles avec Keycloak (OAuth2 / OpenID Connect), API et WebSocket protégés | ✅ |
+| Jour 6 | Actions selon le rôle : acquittement des alertes, interventions de maintenance | ⏳ |
+| Jour 7 | Tests d'intégration (Testcontainers) et mise en ligne | ⏳ |
 
 Deux niveaux d'architecture :
 - **entre les services** : architecture **orientée événements**, avec des services indépendants reliés par Kafka ;
@@ -45,10 +47,18 @@ docker compose up --build
 ```
 
 Puis ouvre :
-- **http://localhost:4300** : le **tableau de bord** en temps réel ;
+- **http://localhost:4300** : le **tableau de bord** en temps réel. Connexion avec un compte de démonstration :
+
+  | Identifiant | Mot de passe | Rôle |
+  |---|---|---|
+  | `operateur` | `operateur` | Opérateur |
+  | `responsable` | `responsable` | Responsable |
+
+- **http://localhost:8180** : la console Keycloak (`admin` / `admin`) ;
 - **http://localhost:8090** (Kafka UI) → *Topics* → `machine-events` → *Messages* : les événements des machines arrivent chaque seconde ;
-- **http://localhost:8082/api/kpis** : les indicateurs calculés de chaque machine (TRS, disponibilité, performance, qualité…) ;
-- **http://localhost:8083/api/alerts** : les dernières alertes (actives et résolues).
+- **http://localhost:8082/api/kpis** et **http://localhost:8083/api/alerts** : les API, qui répondent **401** sans jeton (voir [jour-5.md](docs/jour-5.md) pour les appeler avec un jeton).
+
+Ces comptes et mots de passe servent uniquement à la démonstration en local.
 
 ### Lancer un service depuis un IDE (IntelliJ / VS Code)
 
@@ -131,8 +141,8 @@ Règles : une panne lève une alerte, qui devient **critique** au-delà de 30 s 
 
 ## Stack
 
-Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Angular 19 (signals) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
-*(à venir : Testcontainers, Keycloak, Prometheus, Grafana)*
+Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Spring Security · OAuth2 / OpenID Connect · JWT · Keycloak · Angular 19 (signals) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
+*(à venir : Testcontainers)*
 
 ## Documentation
 
@@ -141,3 +151,4 @@ Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · S
 - [Jour 2 : le kpi-service et le calcul du TRS](docs/jour-2.md)
 - [Jour 3 : le tableau de bord temps réel (WebSocket + Angular)](docs/jour-3.md)
 - [Jour 4 : TRS sur 15 minutes et microservice d'alertes](docs/jour-4.md)
+- [Jour 5 : sécurité avec Keycloak (OAuth2, JWT, rôles)](docs/jour-5.md)

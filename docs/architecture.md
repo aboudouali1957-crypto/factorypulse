@@ -21,6 +21,7 @@ FactoryPulse a deux niveaux d'architecture :
                                                                                     │ servi par nginx      │
                                                                                     └──────────────────────┘
 MongoDB : une base par service (factorypulse pour le kpi-service, factorypulse_alerts pour l'alert-service).
+Keycloak : connexion des utilisateurs ; le dashboard envoie un jeton JWT que chaque service vérifie (jour 5).
 Jour 1 : simulator + Kafka · Jour 2 : kpi-service · Jour 3 : dashboard · Jour 4 : alert-service.
 ```
 

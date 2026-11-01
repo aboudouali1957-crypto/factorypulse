@@ -13,22 +13,26 @@
 
 <main>
   <section class="summary" aria-label="Indicateurs de la ligne">
-    <fp-stat-tile label="TRS moyen de la ligne" [value]="percent(summary().averageOee)"
-                  [detail]="summary().machineCount + ' machines'" />
+    <fp-stat-tile label="TRS de la ligne (15 min)" [value]="percent(summary().averageOee)"
+                  [detail]="'Depuis le début : ' + percent(summary().averageOeeSinceStart)" />
     <fp-stat-tile label="Pièces produites" [value]="integer(summary().piecesProduced)" />
     <fp-stat-tile label="Taux de rebut" [value]="percent(summary().rejectRate)" />
     <fp-stat-tile label="Machines en panne" [value]="summary().machinesDown + ' / ' + summary().machineCount"
                   [detail]="summary().machinesDown === 0 ? 'Toutes les machines tournent' : 'Intervention nécessaire'" />
+    <fp-stat-tile label="Alertes actives" [value]="alerts.active().length + ''" [detail]="alertDetail()" />
     <fp-stat-tile label="Énergie consommée" [value]="decimal(summary().energyKwh) + ' kWh'" />
   </section>
 
-  @if (machines().length === 0) {
-    <p class="empty">En attente des premiers indicateurs… Vérifie que le kpi-service et le simulateur tournent.</p>
-  } @else {
-    <section class="grid" aria-label="Machines">
-      @for (machine of machines(); track machine.snapshot.machineId) {
-        <fp-machine-card [machine]="machine" />
-      }
-    </section>
-  }
+  <div class="layout">
+    @if (machines().length === 0) {
+      <p class="empty">En attente des premiers indicateurs… Vérifie que le kpi-service et le simulateur tournent.</p>
+    } @else {
+      <section class="grid" aria-label="Machines">
+        @for (machine of machines(); track machine.snapshot.machineId) {
+          <fp-machine-card [machine]="machine" [alertCount]="alerts.activeByMachine()[machine.snapshot.machineId] ?? 0" />
+        }
+      </section>
+    }
+    <fp-alerts-panel />
+  </div>
 </main>

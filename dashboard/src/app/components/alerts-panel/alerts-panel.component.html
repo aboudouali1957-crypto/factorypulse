@@ -1,0 +1,43 @@
+<header>
+  <h2>Alertes</h2>
+  <span class="count num" [class.has-alerts]="store.active().length > 0">{{ store.active().length }} active{{ store.active().length > 1 ? 's' : '' }}</span>
+</header>
+
+@if (disconnected()) {
+  <p class="offline">Service d'alertes injoignable – reconnexion…</p>
+}
+
+@if (store.active().length === 0) {
+  <p class="none"><span aria-hidden="true">✓</span> Aucune alerte active</p>
+} @else {
+  <ul class="list" aria-label="Alertes actives">
+    @for (alert of store.active(); track alert.id) {
+      <li class="alert" [class]="'alert ' + alert.severity.toLowerCase()">
+        <span class="severity">
+          <span aria-hidden="true">{{ alert.severity === 'CRITICAL' ? '✕' : '!' }}</span>
+          {{ severityLabels[alert.severity] }}
+        </span>
+        <div class="body">
+          <p class="what">
+            <strong>{{ typeLabels[alert.type] }}</strong> · {{ alert.machineId }} {{ machineName(alert.machineId) }}
+          </p>
+          <p class="message">{{ alert.message }}</p>
+          <p class="meta num">Depuis {{ since(alert.raisedAt) }} (début {{ time(alert.raisedAt) }})</p>
+        </div>
+      </li>
+    }
+  </ul>
+}
+
+@if (store.resolved().length > 0) {
+  <h3>Récemment résolues</h3>
+  <ul class="list resolved" aria-label="Alertes récemment résolues">
+    @for (alert of store.resolved(); track alert.id) {
+      <li>
+        <span class="ok" aria-hidden="true">✓</span>
+        <span class="message">{{ alert.message }}</span>
+        <span class="meta num">{{ time(alert.resolvedAt) }}</span>
+      </li>
+    }
+  </ul>
+}

@@ -67,6 +67,37 @@ h2 {
   color: var(--text-secondary);
 }
 
+.window {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.since-start {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.since-start .num { color: var(--text-secondary); }
+
+.badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.alert-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--status-warning);
+}
+
+.alert-badge span { color: var(--status-warning); }
+
 .factors {
   list-style: none;
   margin: 0;

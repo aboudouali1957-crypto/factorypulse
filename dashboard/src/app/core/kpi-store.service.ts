@@ -3,6 +3,7 @@ import { computed, Injectable, OnDestroy, signal } from '@angular/core';
 import { Client } from '@stomp/stompjs';
 import { applySnapshot, summarize } from './kpi-state';
 import { ConnectionState, KpiSnapshot, MachineView } from './kpi.model';
+import { sameHostWebSocketUrl } from './websocket-url';
 
 /**
  * L'état du tableau de bord, partagé par tous les composants.
@@ -34,7 +35,7 @@ export class KpiStore implements OnDestroy {
     this.loadInitialState();
 
     this.stomp = new Client({
-      brokerURL: webSocketUrl(),
+      brokerURL: sameHostWebSocketUrl('/ws'),
       reconnectDelay: 3000,                    // reconnexion automatique toutes les 3 s si le service redémarre
       onConnect: () => {
         this.connection.set('connected');
@@ -63,10 +64,4 @@ export class KpiStore implements OnDestroy {
   ngOnDestroy(): void {
     void this.stomp.deactivate();
   }
-}
-
-/** Même hôte que la page : en local, un proxy (ng serve ou nginx) redirige /ws vers le kpi-service. */
-function webSocketUrl(): string {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${protocol}//${location.host}/ws`;
 }

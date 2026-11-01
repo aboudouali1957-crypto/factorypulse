@@ -34,7 +34,7 @@ function isOlder(candidate: KpiSnapshot, current: KpiSnapshot): boolean {
 }
 
 function startHistory(snapshot: KpiSnapshot): OeePoint[] {
-  return snapshot.updatedAt == null ? [] : [{ t: snapshot.updatedAt, oee: snapshot.oee }];
+  return snapshot.updatedAt == null ? [] : [{ t: snapshot.updatedAt, oee: snapshot.recent.oee }];
 }
 
 function appendPoint(history: OeePoint[], snapshot: KpiSnapshot): OeePoint[] {
@@ -42,7 +42,7 @@ function appendPoint(history: OeePoint[], snapshot: KpiSnapshot): OeePoint[] {
     return history;
   }
   const last = history[history.length - 1];
-  const point = { t: snapshot.updatedAt, oee: snapshot.oee };
+  const point = { t: snapshot.updatedAt, oee: snapshot.recent.oee };
 
   if (last && snapshot.updatedAt - last.t < MIN_POINT_INTERVAL_MS) {
     // Même seconde : on remplace le dernier point au lieu d'en ajouter un.
@@ -55,7 +55,8 @@ function appendPoint(history: OeePoint[], snapshot: KpiSnapshot): OeePoint[] {
 export interface LineSummary {
   machineCount: number;
   machinesDown: number;
-  averageOee: number;
+  averageOee: number;             // moyenne des TRS sur 15 min
+  averageOeeSinceStart: number;   // moyenne des TRS cumulés
   piecesProduced: number;
   rejectRate: number;
   energyKwh: number;
@@ -69,7 +70,8 @@ export function summarize(machines: MachineView[]): LineSummary {
   return {
     machineCount: snapshots.length,
     machinesDown: snapshots.filter((s) => !s.running).length,
-    averageOee: snapshots.length === 0 ? 0 : sum(snapshots.map((s) => s.oee)) / snapshots.length,
+    averageOee: average(snapshots.map((s) => s.recent.oee)),
+    averageOeeSinceStart: average(snapshots.map((s) => s.oee)),
     piecesProduced: pieces,
     rejectRate: pieces === 0 ? 0 : rejected / pieces,
     energyKwh: sum(snapshots.map((s) => s.energyKwh)),
@@ -78,6 +80,10 @@ export function summarize(machines: MachineView[]): LineSummary {
 
 function sum(values: number[]): number {
   return values.reduce((total, v) => total + v, 0);
+}
+
+function average(values: number[]): number {
+  return values.length === 0 ? 0 : sum(values) / values.length;
 }
 
 /** Niveau du TRS : seuils habituels dans l'industrie. */

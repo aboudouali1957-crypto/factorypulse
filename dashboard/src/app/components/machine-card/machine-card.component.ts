@@ -5,7 +5,10 @@ import { MACHINE_NAMES, MachineView } from '../../core/kpi.model';
 import { OeeGaugeComponent } from '../oee-gauge/oee-gauge.component';
 import { SparklineComponent } from '../sparkline/sparkline.component';
 
-/** La carte d'une machine : état, jauge du TRS, ses trois composantes, compteurs et évolution. */
+/**
+ * La carte d'une machine : état, jauge du TRS, ses trois composantes, compteurs et évolution.
+ * La jauge, les barres et la courbe portent sur les 15 dernières minutes ; les compteurs sur toute la durée.
+ */
 @Component({
   selector: 'fp-machine-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,17 +18,21 @@ import { SparklineComponent } from '../sparkline/sparkline.component';
 })
 export class MachineCardComponent {
   readonly machine = input.required<MachineView>();
+  /** Nombre d'alertes actives sur cette machine (fourni par l'alert-service). */
+  readonly alertCount = input(0);
 
   readonly s = computed(() => this.machine().snapshot);
+  /** Les indicateurs des 15 dernières minutes : ce qu'on affiche en grand. */
+  readonly recent = computed(() => this.s().recent);
   readonly name = computed(() => MACHINE_NAMES[this.s().machineId] ?? this.s().machineId);
-  readonly level = computed(() => oeeLevel(this.s().oee));
+  readonly level = computed(() => oeeLevel(this.recent().oee));
   readonly levelLabel = computed(() => OEE_LEVEL_LABELS[this.level()]);
 
-  /** Les trois composantes du TRS, affichées en barres. */
+  /** Les trois composantes du TRS sur 15 min, affichées en barres. */
   readonly factors = computed(() => [
-    { label: 'Disponibilité', value: this.s().availability },
-    { label: 'Performance', value: this.s().performance },
-    { label: 'Qualité', value: this.s().quality },
+    { label: 'Disponibilité', value: this.recent().availability },
+    { label: 'Performance', value: this.recent().performance },
+    { label: 'Qualité', value: this.recent().quality },
   ]);
 
   readonly percent = formatPercent;

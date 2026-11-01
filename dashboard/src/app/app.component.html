@@ -3,11 +3,21 @@
     <h1>FactoryPulse</h1>
     <p class="subtitle">Supervision de la ligne de production</p>
   </div>
-  <div class="live">
-    <span class="pill" [class]="'pill ' + store.connection()">
-      <span class="dot" aria-hidden="true"></span>{{ connectionLabel() }}
-    </span>
-    <span class="updated num">Dernière mise à jour : {{ lastUpdate() }}</span>
+  <div class="right">
+    <div class="user">
+      <span class="avatar" aria-hidden="true">{{ auth.user.displayName.charAt(0) }}</span>
+      <span class="who">
+        <span class="name">{{ auth.user.displayName }}</span>
+        <span class="role">{{ auth.rolesLabel }}</span>
+      </span>
+      <button type="button" class="logout" (click)="auth.logout()">Se déconnecter</button>
+    </div>
+    <div class="live">
+      <span class="pill" [class]="'pill ' + store.connection()">
+        <span class="dot" aria-hidden="true"></span>{{ connectionLabel() }}
+      </span>
+      <span class="updated num">Dernière mise à jour : {{ lastUpdate() }}</span>
+    </div>
   </div>
 </header>
 

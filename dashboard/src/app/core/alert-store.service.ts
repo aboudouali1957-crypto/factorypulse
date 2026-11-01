@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { Client } from '@stomp/stompjs';
 import { activeAlerts, activeCountByMachine, resolvedAlerts, upsertAlert } from './alert-state';
 import { Alert } from './alert.model';
 import { ConnectionState } from './kpi.model';
+import { AuthService } from './auth.service';
 import { sameHostWebSocketUrl } from './websocket-url';
 
 /** Nombre d'alertes résolues affichées dans l'historique. */
@@ -28,12 +29,17 @@ export class AlertStore implements OnDestroy {
   readonly connection = signal<ConnectionState>('connecting');
 
   private readonly stomp: Client;
+  private readonly auth = inject(AuthService);
 
   constructor(private readonly http: HttpClient) {
     this.loadInitialState();
 
     this.stomp = new Client({
       brokerURL: sameHostWebSocketUrl('/ws-alerts'),
+      // Avant chaque (re)connexion : un jeton à jour, envoyé dans la trame STOMP CONNECT.
+      beforeConnect: async (client) => {
+        client.connectHeaders = { Authorization: `Bearer ${await this.auth.token()}` };
+      },
       reconnectDelay: 3000,
       onConnect: () => {
         this.connection.set('connected');

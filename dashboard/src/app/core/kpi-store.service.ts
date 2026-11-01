@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { Client } from '@stomp/stompjs';
 import { applySnapshot, summarize } from './kpi-state';
 import { ConnectionState, KpiSnapshot, MachineView } from './kpi.model';
+import { AuthService } from './auth.service';
 import { sameHostWebSocketUrl } from './websocket-url';
 
 /**
@@ -30,12 +31,17 @@ export class KpiStore implements OnDestroy {
   readonly lastUpdate = signal<number | null>(null);
 
   private readonly stomp: Client;
+  private readonly auth = inject(AuthService);
 
   constructor(private readonly http: HttpClient) {
     this.loadInitialState();
 
     this.stomp = new Client({
       brokerURL: sameHostWebSocketUrl('/ws'),
+      // Avant chaque (re)connexion : un jeton à jour, envoyé dans la trame STOMP CONNECT.
+      beforeConnect: async (client) => {
+        client.connectHeaders = { Authorization: `Bearer ${await this.auth.token()}` };
+      },
       reconnectDelay: 3000,                    // reconnexion automatique toutes les 3 s si le service redémarre
       onConnect: () => {
         this.connection.set('connected');

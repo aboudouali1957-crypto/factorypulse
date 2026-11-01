@@ -4,6 +4,7 @@ import { MachineCardComponent } from './components/machine-card/machine-card.com
 import { StatTileComponent } from './components/stat-tile/stat-tile.component';
 import { formatDecimal, formatInteger, formatPercent, formatTime } from './core/format';
 import { AlertStore } from './core/alert-store.service';
+import { AuthService } from './core/auth.service';
 import { KpiStore } from './core/kpi-store.service';
 
 @Component({
@@ -16,6 +17,7 @@ import { KpiStore } from './core/kpi-store.service';
 export class AppComponent {
   readonly store = inject(KpiStore);
   readonly alerts = inject(AlertStore);
+  readonly auth = inject(AuthService);
 
   readonly summary = this.store.summary;
   readonly machines = this.store.machines;

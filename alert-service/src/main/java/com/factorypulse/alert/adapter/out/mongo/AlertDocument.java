@@ -27,6 +27,8 @@ public class AlertDocument {
     private long updatedAt;
     @Indexed
     private Long resolvedAt;
+    private String acknowledgedBy;
+    private Long acknowledgedAt;
 
     /** Constructeur vide, utilisé par Spring Data pour relire un document. */
     protected AlertDocument() {
@@ -42,10 +44,13 @@ public class AlertDocument {
         doc.raisedAt = alert.raisedAt();
         doc.updatedAt = alert.updatedAt();
         doc.resolvedAt = alert.resolvedAt();
+        doc.acknowledgedBy = alert.acknowledgedBy();
+        doc.acknowledgedAt = alert.acknowledgedAt();
         return doc;
     }
 
     Alert toDomain() {
-        return new Alert(id, machineId, type, severity, message, raisedAt, updatedAt, resolvedAt);
+        return new Alert(id, machineId, type, severity, message, raisedAt, updatedAt, resolvedAt,
+                acknowledgedBy, acknowledgedAt);
     }
 }

@@ -2,6 +2,7 @@ package com.factorypulse.alert.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +20,10 @@ import org.springframework.security.web.SecurityFilterChain;
  * et l'émetteur (voir application.yml), puis lit l'utilisateur et ses rôles dans le jeton.
  *
  *  - /api/**      : jeton obligatoire (sinon 401) ;
+ *  - certaines actions exigent en plus un rôle précis (sinon 403) :
+ *      POST /api/alerts/{id}/acknowledge  → OPERATEUR
+ *      POST /api/interventions            → OPERATEUR
+ *      GET  /api/interventions            → RESPONSABLE
  *  - /ws-alerts          : la poignée de main WebSocket est ouverte, mais la connexion STOMP
  *                   exige un jeton valide (voir StompAuthInterceptor).
  */
@@ -34,6 +39,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/ws-alerts", "/ws-alerts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/alerts/*/acknowledge").hasRole("OPERATEUR")
+                        .requestMatchers(HttpMethod.POST, "/api/interventions").hasRole("OPERATEUR")
+                        .requestMatchers(HttpMethod.GET, "/api/interventions", "/api/interventions/**").hasRole("RESPONSABLE")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtConverter())));
         return http.build();

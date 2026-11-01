@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Surveille UNE machine et décide quand lever, aggraver ou résoudre une alerte.
@@ -139,6 +140,25 @@ public class MachineMonitor {
 
     private static String percent(double rate) {
         return Math.round(rate * 100) + " %";
+    }
+
+    /**
+     * Prise en charge d'une alerte active de cette machine par un opérateur.
+     * Le moniteur garde ainsi la bonne version : quand l'alerte s'aggravera ou sera résolue,
+     * la prise en charge sera conservée.
+     *
+     * @return la nouvelle version de l'alerte, ou vide si ce moniteur n'a pas d'alerte active avec cet identifiant
+     */
+    public Optional<Alert> acknowledge(String alertId, String username, long at) {
+        if (downtimeAlert != null && downtimeAlert.id().equals(alertId)) {
+            downtimeAlert = downtimeAlert.acknowledge(username, at);
+            return Optional.of(downtimeAlert);
+        }
+        if (rejectAlert != null && rejectAlert.id().equals(alertId)) {
+            rejectAlert = rejectAlert.acknowledge(username, at);
+            return Optional.of(rejectAlert);
+        }
+        return Optional.empty();
     }
 
     public String machineId() {

@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * ADAPTATEUR DE SORTIE : implémente le port {@link AlertRepository} avec MongoDB.
@@ -22,6 +23,11 @@ public class MongoAlertRepository implements AlertRepository {
     @Override
     public void save(Alert alert) {
         springData.save(AlertDocument.from(alert));
+    }
+
+    @Override
+    public Optional<Alert> findById(String id) {
+        return springData.findById(id).map(AlertDocument::toDomain);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.factorypulse.alert.application.port.out;
 import com.factorypulse.alert.domain.Alert;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * PORT DE SORTIE : où sont gardées les alertes (implémenté avec MongoDB par un adaptateur).
@@ -11,6 +12,8 @@ public interface AlertRepository {
 
     /** Enregistre une alerte, ou remplace la version précédente qui a le même identifiant. */
     void save(Alert alert);
+
+    Optional<Alert> findById(String id);
 
     /** Les alertes encore actives, toutes machines confondues. */
     List<Alert> findActive();

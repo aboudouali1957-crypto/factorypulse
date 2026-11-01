@@ -1,0 +1,42 @@
+server:
+  port: 8083   # 8082 : kpi-service
+
+spring:
+  application:
+    name: factorypulse-alert-service
+  data:
+    mongodb:
+      # Base séparée de celle du kpi-service : chaque microservice possède ses propres données.
+      uri: ${MONGODB_URI:mongodb://localhost:27017/factorypulse_alerts}
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      # Groupe différent du kpi-service : les deux services reçoivent chacun tous les événements.
+      group-id: alert-service
+      # Au tout premier démarrage, on part des événements NOUVEAUX : une alerte concerne le présent,
+      # inutile de rejouer des jours d'historique. (Le kpi-service, lui, lit tout depuis le début.)
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: com.factorypulse.alert.domain.MachineEvent
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.factorypulse.alert.domain
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+alert:
+  events-topic: machine-events
+  alerts-topic: machine-alerts
+  # Une panne devient critique après 30 s.
+  prolonged-downtime-seconds: 30
+  # Taux de rebut calculé sur les 50 dernières pièces : alerte au-dessus de 10 %,
+  # résolution à 4 % ou moins.
+  reject-window-size: 50
+  reject-rate-threshold: 0.10
+  reject-rate-clear-threshold: 0.04

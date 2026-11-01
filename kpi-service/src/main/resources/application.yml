@@ -43,3 +43,8 @@ kpi:
     "[M2]": 3.0
     "[M3]": 1.5
     "[M4]": 2.5
+
+factorypulse:
+  # Origines autorisées à ouvrir le WebSocket (séparées par des virgules).
+  # En production : l'adresse publique du tableau de bord (variable d'environnement ALLOWED_ORIGINS).
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}

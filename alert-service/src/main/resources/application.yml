@@ -49,3 +49,8 @@ alert:
   reject-window-size: 50
   reject-rate-threshold: 0.10
   reject-rate-clear-threshold: 0.04
+
+factorypulse:
+  # Origines autorisées à ouvrir le WebSocket (séparées par des virgules).
+  # En production : l'adresse publique du tableau de bord (variable d'environnement ALLOWED_ORIGINS).
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}

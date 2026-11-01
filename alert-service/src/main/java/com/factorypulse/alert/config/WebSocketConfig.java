@@ -1,6 +1,7 @@
 package com.factorypulse.alert.config;
 
 import com.factorypulse.alert.adapter.in.websocket.StompAuthInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -22,14 +23,21 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompAuthInterceptor stompAuthInterceptor;
+    private final String[] allowedOrigins;
 
-    public WebSocketConfig(StompAuthInterceptor stompAuthInterceptor) {
+    /**
+     * @param allowedOrigins origines autorisées à ouvrir le WebSocket : les adresses locales en développement,
+     *                       l'adresse publique du site en production (variable ALLOWED_ORIGINS)
+     */
+    public WebSocketConfig(StompAuthInterceptor stompAuthInterceptor,
+                           @Value("${factorypulse.allowed-origins}") String[] allowedOrigins) {
         this.stompAuthInterceptor = stompAuthInterceptor;
+        this.allowedOrigins = allowedOrigins;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws-alerts").setAllowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*");
+        registry.addEndpoint("/ws-alerts").setAllowedOriginPatterns(allowedOrigins);
     }
 
     @Override

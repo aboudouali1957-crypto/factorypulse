@@ -48,4 +48,4 @@ Le code s'adapte à l'adresse publique sans être modifié :
 
 **Pourquoi Caddy** : il obtient et renouvelle seul le certificat HTTPS. La configuration tient en quelques lignes.
 
-Le guide pas à pas pour AWS est dans [deploiement.md](deploiement.md).
+En production, le projet tourne sur un serveur **AWS EC2** (Ubuntu, Docker Compose), avec une adresse IP fixe (Elastic IP) et un pare-feu (*security group*) qui n'ouvre que les ports 80 et 443 au public, plus SSH pour l'administrateur.

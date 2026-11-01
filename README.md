@@ -83,7 +83,7 @@ cd dashboard     && npm install && npm run test:ci && cd ..
 
 ### Mise en ligne
 
-Le projet est déployé sur un serveur **AWS EC2** avec `docker-compose.prod.yml` : un seul point d'entrée public (Caddy, HTTPS automatique), Keycloak servi sous `/auth`, et aucun autre port exposé (Kafka, MongoDB et les API restent sur le réseau Docker interne). Guide pas à pas : [docs/deploiement.md](docs/deploiement.md).
+Le projet est déployé sur un serveur **AWS EC2** avec `docker-compose.prod.yml` : un seul point d'entrée public (Caddy, HTTPS automatique), Keycloak servi sous `/auth`, et aucun autre port exposé (Kafka, MongoDB et les API restent sur le réseau Docker interne).
 
 ## Exemple d'événement publié
 
@@ -161,4 +161,3 @@ Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · S
 - [Jour 5 : sécurité avec Keycloak (OAuth2, JWT, rôles)](docs/jour-5.md)
 - [Jour 6 : actions selon le rôle (alertes, interventions)](docs/jour-6.md)
 - [Jour 7 : tests d'intégration et mise en ligne](docs/jour-7.md)
-- [Mise en ligne sur AWS, pas à pas](docs/deploiement.md)

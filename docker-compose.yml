@@ -79,6 +79,8 @@ services:
       KC_HOSTNAME: http://localhost:8180
       # Les services, eux, joignent Keycloak par le réseau Docker (http://keycloak:8080).
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      # Adresse publique du tableau de bord, insérée dans le realm à l'import (${FP_PUBLIC_URL}).
+      FP_PUBLIC_URL: ${FP_PUBLIC_URL:-http://localhost:4300}
     volumes:
       - ./keycloak/factorypulse-realm.json:/opt/keycloak/data/import/factorypulse-realm.json:ro
 

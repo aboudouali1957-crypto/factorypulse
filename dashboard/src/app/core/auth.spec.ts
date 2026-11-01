@@ -1,4 +1,4 @@
-import { hasRole, rolesLabel, userFromClaims } from './auth';
+import { hasRole, keycloakUrl, rolesLabel, userFromClaims } from './auth';
 
 describe('userFromClaims', () => {
   it('lit le nom et les rôles FactoryPulse du jeton', () => {
@@ -27,6 +27,18 @@ describe('hasRole', () => {
     const operateur = userFromClaims({ preferred_username: 'operateur', realm_access: { roles: ['OPERATEUR'] } });
     expect(hasRole(operateur, 'OPERATEUR')).toBeTrue();
     expect(hasRole(operateur, 'RESPONSABLE')).toBeFalse();
+  });
+});
+
+describe('keycloakUrl', () => {
+  it('en local, Keycloak est sur le port 8180', () => {
+    const local = { protocol: 'http:', hostname: 'localhost', port: '4300', origin: 'http://localhost:4300' };
+    expect(keycloakUrl(local)).toBe('http://localhost:8180');
+  });
+
+  it('en production, Keycloak est sous /auth sur le même domaine', () => {
+    const prod = { protocol: 'https:', hostname: 'factorypulse.example', port: '', origin: 'https://factorypulse.example' };
+    expect(keycloakUrl(prod)).toBe('https://factorypulse.example/auth');
   });
 });
 

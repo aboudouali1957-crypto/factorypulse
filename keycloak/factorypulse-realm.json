@@ -30,11 +30,11 @@
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:4300/*"],
-      "webOrigins": ["http://localhost:4300"],
+      "redirectUris": ["http://localhost:4300/*", "${FP_PUBLIC_URL}/*"],
+      "webOrigins": ["+"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:4300/*"
+        "post.logout.redirect.uris": "http://localhost:4300/*##${FP_PUBLIC_URL}/*"
       }
     }
   ],
@@ -52,7 +52,7 @@
     {
       "username": "responsable",
       "enabled": true,
-      "firstName": "ALI",
+      "firstName": "Ali",
       "lastName": "ABOUDOU",
       "email": "responsable@factorypulse.local",
       "emailVerified": true,

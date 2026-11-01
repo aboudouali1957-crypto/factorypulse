@@ -45,9 +45,13 @@ export function rolesLabel(roles: Role[]): string {
   return roles.length === 0 ? 'Aucun rôle' : roles.map((r) => ROLE_LABELS[r]).join(', ');
 }
 
-/** Adresse de Keycloak : même machine que la page, port 8180. */
-export function keycloakUrl(): string {
-  return `${location.protocol}//${location.hostname}:8180`;
+/**
+ * Adresse de Keycloak :
+ *  - en local (dashboard sur le port 4300), Keycloak est sur la même machine, port 8180 ;
+ *  - en production, Keycloak est servi par le même domaine, sous le chemin /auth (voir Caddyfile).
+ */
+export function keycloakUrl(page: Pick<Location, 'protocol' | 'hostname' | 'port' | 'origin'> = location): string {
+  return page.port === '4300' ? `${page.protocol}//${page.hostname}:8180` : `${page.origin}/auth`;
 }
 
 export const KEYCLOAK_REALM = 'factorypulse';

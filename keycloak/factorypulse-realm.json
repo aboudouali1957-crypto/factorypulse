@@ -1,0 +1,63 @@
+{
+  "realm": "factorypulse",
+  "displayName": "FactoryPulse",
+  "enabled": true,
+  "sslRequired": "none",
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 300,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr", "en"],
+  "defaultLocale": "fr",
+  "roles": {
+    "realm": [
+      {
+        "name": "OPERATEUR",
+        "description": "Opérateur de ligne : suit la production et traite les alertes"
+      },
+      {
+        "name": "RESPONSABLE",
+        "description": "Responsable de production : supervise la ligne et les interventions"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "factorypulse-dashboard",
+      "name": "Tableau de bord FactoryPulse",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:4300/*"],
+      "webOrigins": ["http://localhost:4300"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4300/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "operateur",
+      "enabled": true,
+      "firstName": "Olivia",
+      "lastName": "Martin",
+      "email": "operateur@factorypulse.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "operateur", "temporary": false }],
+      "realmRoles": ["OPERATEUR"]
+    },
+    {
+      "username": "responsable",
+      "enabled": true,
+      "firstName": "Karim",
+      "lastName": "Benali",
+      "email": "responsable@factorypulse.local",
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "responsable", "temporary": false }],
+      "realmRoles": ["RESPONSABLE"]
+    }
+  ]
+}

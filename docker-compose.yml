@@ -63,6 +63,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Serveur d'identité (jour 5) : connexion des utilisateurs, rôles, jetons JWT.
+  # Console d'administration : http://localhost:8180 (admin / admin, uniquement pour le développement)
+  # Le realm "factorypulse" (rôles, utilisateurs de démo, client du dashboard) est importé au démarrage.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.7
+    container_name: factorypulse-keycloak
+    command: start-dev --import-realm
+    ports:
+      - "8180:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Adresse publique de Keycloak (celle du navigateur) : c'est elle qui apparaît dans les jetons.
+      KC_HOSTNAME: http://localhost:8180
+      # Les services, eux, joignent Keycloak par le réseau Docker (http://keycloak:8080).
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    volumes:
+      - ./keycloak/factorypulse-realm.json:/opt/keycloak/data/import/factorypulse-realm.json:ro
+
   # Le service de calcul des indicateurs : lit Kafka, calcule le TRS, stocke dans MongoDB (jour 2)
   # API : http://localhost:8082/api/kpis
   kpi-service:
@@ -73,7 +92,10 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       MONGODB_URI: mongodb://mongo:27017/factorypulse
+      KEYCLOAK_JWKS: http://keycloak:8080/realms/factorypulse/protocol/openid-connect/certs
     depends_on:
+      keycloak:
+        condition: service_started
       kafka:
         condition: service_healthy
       mongo:
@@ -90,7 +112,10 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       MONGODB_URI: mongodb://mongo:27017/factorypulse_alerts
+      KEYCLOAK_JWKS: http://keycloak:8080/realms/factorypulse/protocol/openid-connect/certs
     depends_on:
+      keycloak:
+        condition: service_started
       kafka:
         condition: service_healthy
       mongo:

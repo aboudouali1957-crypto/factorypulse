@@ -1,7 +1,7 @@
 # FactoryPulse
 
 Plateforme de **supervision en temps réel d'une ligne de production**.
-Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**. Un service **Spring Boot** calcule les indicateurs (TRS cumulé et sur 15 minutes glissantes, taux de rebut, cadence, consommation), un autre détecte les **alertes** (pannes prolongées, rebuts anormaux), et un tableau de bord **Angular** affiche le tout en direct via **WebSocket**. L'accès est protégé par **Keycloak** (OAuth2 / OpenID Connect) avec deux rôles : opérateur et responsable.
+Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**. Un service **Spring Boot** calcule les indicateurs (TRS cumulé et sur 15 minutes glissantes, taux de rebut, cadence, consommation), un autre détecte les **alertes** (pannes prolongées, rebuts anormaux), et un tableau de bord **Angular** affiche le tout en direct via **WebSocket**. L'accès est protégé par **Keycloak** (OAuth2 / OpenID Connect) avec deux rôles : l'**opérateur** prend les alertes en charge et saisit les interventions de maintenance, le **responsable** consulte leur historique.
 
 ![Tableau de bord FactoryPulse](docs/screenshots/dashboard.png)
 
@@ -29,7 +29,7 @@ Le kpi-service et l'alert-service lisent **le même topic** avec deux *consumer 
 | Jour 3 | WebSocket + tableau de bord Angular temps réel | ✅ |
 | Jour 4 | TRS sur 15 min glissantes + microservice d'alertes + panneau Alertes | ✅ |
 | Jour 5 | Sécurité : connexion et rôles avec Keycloak (OAuth2 / OpenID Connect), API et WebSocket protégés | ✅ |
-| Jour 6 | Actions selon le rôle : acquittement des alertes, interventions de maintenance | ⏳ |
+| Jour 6 | Actions selon le rôle : prise en charge des alertes, interventions de maintenance, historique | ✅ |
 | Jour 7 | Tests d'intégration (Testcontainers) et mise en ligne | ⏳ |
 
 Deux niveaux d'architecture :
@@ -49,10 +49,10 @@ docker compose up --build
 Puis ouvre :
 - **http://localhost:4300** : le **tableau de bord** en temps réel. Connexion avec un compte de démonstration :
 
-  | Identifiant | Mot de passe | Rôle |
-  |---|---|---|
-  | `operateur` | `operateur` | Opérateur |
-  | `responsable` | `responsable` | Responsable |
+  | Identifiant | Mot de passe | Rôle | Peut |
+  |---|---|---|---|
+  | `operateur` | `operateur` | Opérateur | prendre une alerte en charge, saisir une intervention |
+  | `responsable` | `responsable` | Responsable | consulter l'historique des interventions et le bilan par machine |
 
 - **http://localhost:8180** : la console Keycloak (`admin` / `admin`) ;
 - **http://localhost:8090** (Kafka UI) → *Topics* → `machine-events` → *Messages* : les événements des machines arrivent chaque seconde ;
@@ -141,7 +141,7 @@ Règles : une panne lève une alerte, qui devient **critique** au-delà de 30 s 
 
 ## Stack
 
-Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Spring Security · OAuth2 / OpenID Connect · JWT · Keycloak · Angular 19 (signals) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
+Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Spring Security · OAuth2 / OpenID Connect · JWT · Keycloak · Angular 19 (signals, Reactive Forms) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
 *(à venir : Testcontainers)*
 
 ## Documentation
@@ -152,3 +152,4 @@ Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · S
 - [Jour 3 : le tableau de bord temps réel (WebSocket + Angular)](docs/jour-3.md)
 - [Jour 4 : TRS sur 15 minutes et microservice d'alertes](docs/jour-4.md)
 - [Jour 5 : sécurité avec Keycloak (OAuth2, JWT, rôles)](docs/jour-5.md)
+- [Jour 6 : actions selon le rôle (alertes, interventions)](docs/jour-6.md)

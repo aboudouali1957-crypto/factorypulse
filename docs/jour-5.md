@@ -27,7 +27,7 @@ Le realm `factorypulse` est importé automatiquement au démarrage de Keycloak d
 
 Console d'administration : http://localhost:8180 (`admin` / `admin`). Ces mots de passe sont réservés au développement local.
 
-Les rôles sont déjà présents dans les jetons et lus par les services. Ils serviront au jour 6, pour les actions réservées à un rôle (acquitter une alerte, saisir une intervention…).
+Les rôles sont présents dans les jetons et lus par les services. Le jour 6 s'en sert pour réserver des actions à un rôle (voir [jour-6.md](jour-6.md)).
 
 ## Le flux de connexion : Authorization Code + PKCE
 

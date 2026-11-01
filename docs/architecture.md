@@ -10,25 +10,31 @@ FactoryPulse a deux niveaux d'architecture :
 ## 1. Vue d'ensemble : des services qui communiquent par événements
 
 ```
-┌──────────────┐   événements   ┌─────────┐   événements   ┌──────────────┐   WebSocket   ┌─────────────┐
-│  simulator   │ ─────────────► │  Kafka  │ ─────────────► │ kpi-service  │ ────────────► │  dashboard  │
-│ (Spring Boot)│ machine-events │ (KRaft) │                │ (Spring Boot)│               │  (Angular)  │
-└──────────────┘                └─────────┘                └──────┬───────┘               └─────────────┘
-     JOUR 1                       JOUR 1                          │ MongoDB                    JOUR 3
-                                                                  ▼
-                                                               JOUR 2
+┌──────────────┐  machine-events  ┌─────────┐ ── groupe "kpi-service" ───► ┌───────────────┐
+│  simulator   │ ───────────────► │  Kafka  │                              │  kpi-service  │ ──┐
+│ (Spring Boot)│                  │ (KRaft) │ ── groupe "alert-service" ─► ├───────────────┤   │ REST + WebSocket
+└──────────────┘                  │         │                              │ alert-service │ ──┤
+                                  │         │ ◄── machine-alerts ───────── └───────────────┘   │
+                                  └─────────┘                                                  ▼
+                                                                                    ┌──────────────────────┐
+                                                                                    │ dashboard (Angular)  │
+                                                                                    │ servi par nginx      │
+                                                                                    └──────────────────────┘
+MongoDB : une base par service (factorypulse pour le kpi-service, factorypulse_alerts pour l'alert-service).
+Jour 1 : simulator + Kafka · Jour 2 : kpi-service · Jour 3 : dashboard · Jour 4 : alert-service.
 ```
 
 | Service | Rôle | Communique avec |
 |---|---|---|
 | `simulator` | Simule les machines, publie les événements | Kafka (producteur) |
-| `kpi-service` | Lit les événements, calcule TRS, rebut, cadence, énergie ; les expose en REST | Kafka (consommateur), MongoDB, API REST, WebSocket |
-| `dashboard` | Affiche les indicateurs en temps réel | kpi-service (WebSocket) |
+| `kpi-service` | Lit les événements, calcule TRS (cumulé et sur 15 min), rebut, cadence, énergie ; les expose en REST et WebSocket | Kafka (consommateur), MongoDB, API REST, WebSocket |
+| `alert-service` | Lit les mêmes événements, détecte pannes prolongées et rebuts anormaux, publie les alertes | Kafka (consommateur et producteur), MongoDB, API REST, WebSocket |
+| `dashboard` | Affiche les indicateurs et les alertes en temps réel | kpi-service et alert-service, via nginx |
 
 **Pourquoi ce découpage ?**
 - **Découplage** : le simulateur ne connaît pas le kpi-service. Chacun peut être arrêté, redéployé ou remplacé sans casser l'autre.
 - **Résilience** : si le kpi-service tombe, les événements restent dans Kafka et sont lus au redémarrage.
-- **Évolutivité** : on peut ajouter un nouveau consommateur (alertes, archivage, IA) sans modifier les autres services. Grâce aux 3 partitions, on peut aussi lancer plusieurs instances du kpi-service pour lire en parallèle.
+- **Évolutivité** : on peut ajouter un nouveau consommateur sans modifier les autres services. C'est ce qu'on a fait au jour 4 avec l'`alert-service` : ni le simulateur ni le kpi-service n'ont changé pour l'accueillir. Grâce aux 3 partitions, on peut aussi lancer plusieurs instances du kpi-service pour lire en parallèle.
 
 ---
 
@@ -53,7 +59,7 @@ Le principe : **le métier est au centre et ne dépend de rien**. Les technologi
                      └───────────────────────────────────────────────┘
 ```
 
-Les deux services suivent ce même découpage : le simulateur (ci-dessous) et le kpi-service (détaillé dans [jour-2.md](jour-2.md)).
+Les trois services Java suivent ce même découpage : le simulateur (ci-dessous), le kpi-service (détaillé dans [jour-2.md](jour-2.md)) et l'alert-service (détaillé dans [jour-4.md](jour-4.md)).
 
 ### Les couches du simulateur
 

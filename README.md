@@ -1,21 +1,22 @@
 # FactoryPulse
 
 Plateforme de **supervision en temps réel d'une ligne de production**.
-Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**, un service **Spring Boot** calcule les indicateurs (TRS, taux de rebut, cadence, consommation) et un tableau de bord **Angular** les affiche en direct via **WebSocket**.
+Un simulateur imite des machines d'usine (production, pannes, rebuts, énergie). Les événements passent par **Kafka**. Un service **Spring Boot** calcule les indicateurs (TRS cumulé et sur 15 minutes glissantes, taux de rebut, cadence, consommation), un autre détecte les **alertes** (pannes prolongées, rebuts anormaux), et un tableau de bord **Angular** affiche le tout en direct via **WebSocket**.
 
 ![Tableau de bord FactoryPulse](docs/screenshots/dashboard.png)
 
 ## Architecture
 
 ```
-Simulateur (Spring Boot) ──► Kafka ──► kpi-service (Spring Boot) ──► MongoDB
-  machines, pannes,      topic          calcul du TRS,
-  rebuts, énergie    machine-events     rebut, cadence
-                                              │
-                                 API REST + WebSocket (STOMP)
-                                              ▼
-                                 dashboard (Angular, servi par nginx)
+                                       ┌──► kpi-service (Spring Boot) ──► MongoDB
+Simulateur (Spring Boot) ──► Kafka ────┤     calcul du TRS, rebut, cadence      │
+  machines, pannes,     machine-events │                                        │ REST + WebSocket
+  rebuts, énergie                      └──► alert-service (Spring Boot) ──► MongoDB   ▼
+                                             pannes, rebuts anormaux ──┬──► dashboard (Angular, nginx)
+                                                                       └──► Kafka : machine-alerts
 ```
+
+Le kpi-service et l'alert-service lisent **le même topic** avec deux *consumer groups* différents : chacun reçoit tous les événements, sans dépendre de l'autre.
 
 ## Avancement
 
@@ -24,8 +25,10 @@ Simulateur (Spring Boot) ──► Kafka ──► kpi-service (Spring Boot) ─
 | Jour 1 | Simulateur de machines + Kafka + Docker Compose | ✅ |
 | Jour 2 | Service KPI : lecture Kafka, calcul du TRS, MongoDB, API REST, tests | ✅ |
 | Jour 3 | WebSocket + tableau de bord Angular temps réel | ✅ |
-| Jour 4 | Alertes, Prometheus / Grafana, CI complète | ⏳ |
-| Jour 5 | Résumé des incidents par IA (API Claude) | ⏳ |
+| Jour 4 | TRS sur 15 min glissantes + microservice d'alertes + panneau Alertes | ✅ |
+| Jour 5 | Tests d'intégration avec un vrai Kafka et un vrai MongoDB (Testcontainers) | ⏳ |
+| Jour 6 | Sécurité : authentification et rôles (Keycloak, OAuth2 / OpenID Connect) | ⏳ |
+| Jour 7 | Montée en charge (plusieurs instances) + supervision Prometheus / Grafana | ⏳ |
 
 Deux niveaux d'architecture :
 - **entre les services** : architecture **orientée événements**, avec des services indépendants reliés par Kafka ;
@@ -44,7 +47,8 @@ docker compose up --build
 Puis ouvre :
 - **http://localhost:4300** : le **tableau de bord** en temps réel ;
 - **http://localhost:8090** (Kafka UI) → *Topics* → `machine-events` → *Messages* : les événements des machines arrivent chaque seconde ;
-- **http://localhost:8082/api/kpis** : les indicateurs calculés de chaque machine (TRS, disponibilité, performance, qualité…).
+- **http://localhost:8082/api/kpis** : les indicateurs calculés de chaque machine (TRS, disponibilité, performance, qualité…) ;
+- **http://localhost:8083/api/alerts** : les dernières alertes (actives et résolues).
 
 ### Lancer un service depuis un IDE (IntelliJ / VS Code)
 
@@ -59,6 +63,7 @@ Puis lance `SimulatorApplication` depuis l'IDE : il se connecte à `localhost:90
 ```bash
 cd simulator   && mvn test && cd ..
 cd kpi-service && mvn test && cd ..
+cd alert-service && mvn test && cd ..
 cd dashboard   && npm install && npm run test:ci && cd ..
 ```
 
@@ -94,15 +99,40 @@ Types : `PIECE_PRODUCED`, `MACHINE_DOWN`, `MACHINE_UP`, `ENERGY_READING`.
   "throughputPerHour": 1495.0,
   "energyKwh": 13.99,
   "downCount": 13,
-  "updatedAt": 1767229200000
+  "updatedAt": 1767229200000,
+  "recent": {
+    "windowMinutes": 15,
+    "availability": 0.871,
+    "performance": 0.902,
+    "quality": 0.968,
+    "oee": 0.760,
+    "piecesProduced": 352,
+    "rejectedPieces": 11
+  }
 }
 ```
-Ici, après une heure de simulation : **TRS de 80,7 %** (disponibilité 92,5 % × performance 89,8 % × qualité 97,1 %).
+Ici, après une heure de simulation : **TRS cumulé de 80,7 %** (disponibilité 92,5 % × performance 89,8 % × qualité 97,1 %). Sur les 15 dernières minutes, une panne récente fait descendre le TRS à 76,0 %.
+
+## Exemple d'alerte (`GET /api/alerts`)
+
+```json
+{
+  "id": "M3-DOWNTIME-1767229140000",
+  "machineId": "M3",
+  "type": "DOWNTIME",
+  "severity": "CRITICAL",
+  "message": "M3 en panne depuis plus de 30 s",
+  "raisedAt": 1767229140000,
+  "updatedAt": 1767229170000,
+  "resolvedAt": null
+}
+```
+Règles : une panne lève une alerte, qui devient **critique** au-delà de 30 s et se résout à la remise en marche ; un taux de rebut supérieur à 10 % sur les 50 dernières pièces lève une alerte, résolue sous 4 %.
 
 ## Stack
 
 Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · Spring Data · API REST · WebSocket (STOMP) · Angular 19 (signals) · TypeScript · nginx · Docker Compose · JUnit 5 · Jasmine/Karma · GitHub Actions
-*(à venir : Prometheus, Grafana)*
+*(à venir : Testcontainers, Keycloak, Prometheus, Grafana)*
 
 ## Documentation
 
@@ -110,3 +140,4 @@ Java 21 · Spring Boot 3 · Spring Kafka · Apache Kafka (KRaft) · MongoDB · S
 - [Jour 1 : le simulateur et Kafka expliqués](docs/jour-1.md)
 - [Jour 2 : le kpi-service et le calcul du TRS](docs/jour-2.md)
 - [Jour 3 : le tableau de bord temps réel (WebSocket + Angular)](docs/jour-3.md)
+- [Jour 4 : TRS sur 15 minutes et microservice d'alertes](docs/jour-4.md)

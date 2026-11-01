@@ -8,6 +8,15 @@ spring:
     mongodb:
       # En local (IDE) : localhost. Dans Docker Compose : mongo (variable d'environnement).
       uri: ${MONGODB_URI:mongodb://localhost:27017/factorypulse}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Émetteur attendu dans les jetons : l'adresse de Keycloak telle que le NAVIGATEUR la voit.
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/factorypulse}
+          # Où ce service télécharge les clés publiques de Keycloak pour vérifier les signatures.
+          # Dans Docker Compose, Keycloak s'appelle "keycloak" (variable d'environnement).
+          jwk-set-uri: ${KEYCLOAK_JWKS:http://localhost:8180/realms/factorypulse/protocol/openid-connect/certs}
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:

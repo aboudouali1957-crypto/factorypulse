@@ -79,8 +79,25 @@ services:
       mongo:
         condition: service_healthy
 
+  # Le service d'alertes : lit les mêmes événements Kafka (autre consumer group),
+  # détecte les pannes et les rebuts anormaux, publie dans le topic machine-alerts (jour 4)
+  # API : http://localhost:8083/api/alerts
+  alert-service:
+    build: ./alert-service
+    container_name: factorypulse-alert-service
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      MONGODB_URI: mongodb://mongo:27017/factorypulse_alerts
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
   # Le tableau de bord Angular, servi par nginx (jour 3) : http://localhost:4300
-  # nginx redirige /api et /ws vers le kpi-service.
+  # nginx redirige /api et /ws vers le kpi-service, /api/alerts et /ws-alerts vers l'alert-service.
   dashboard:
     build: ./dashboard
     container_name: factorypulse-dashboard
@@ -88,6 +105,7 @@ services:
       - "4300:80"
     depends_on:
       - kpi-service
+      - alert-service
 
 volumes:
   mongo-data:

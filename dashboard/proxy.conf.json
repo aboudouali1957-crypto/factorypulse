@@ -1,6 +1,15 @@
 {
+  "/api/alerts": {
+    "target": "http://localhost:8083",
+    "secure": false
+  },
   "/api": {
     "target": "http://localhost:8082",
+    "secure": false
+  },
+  "/ws-alerts": {
+    "target": "http://localhost:8083",
+    "ws": true,
     "secure": false
   },
   "/ws": {
